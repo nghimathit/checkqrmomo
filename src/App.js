@@ -4,15 +4,15 @@ import React, { useState } from "react";
 function App() {
   const [phoneNumbers, setPhoneNumbers] = useState([]);
   const [password] = useState("vanhuY90$");
-  const [newPhoneNumbers, setNewPhoneNumbers] = useState(""); 
+  const [newPhoneNumbers, setNewPhoneNumbers] = useState("");
   const [AllAmount, setAllAmount] = useState([]);
-  const [totalAmount, setTotalAmount] = useState(0); 
-  const today = new Date(); 
-  const [day, setday] = useState(String(today.getDate()).padStart(2, "0"))
-  const [month, setmonth] = useState(String(today.getMonth() + 1).padStart(2, "0"))
-  const [year, setyear] = useState( today.getFullYear())
+  const [totalAmount, setTotalAmount] = useState(0);
+  const today = new Date();
+  const [day, setDay] = useState(String(today.getDate()).padStart(2, "0"));
+  const [month, setMonth] = useState(String(today.getMonth() + 1).padStart(2, "0"));
+  const [year, setYear] = useState(today.getFullYear());
 
-  const formattedDate = `${year}-${month}-${day}`; // Định dạng thành DD/MM/YYYY
+  const formattedDate = `${year}-${month}-${day}`;
   console.log("Today:", formattedDate);
 
   const loginAndGetAmount = async (username) => {
@@ -45,6 +45,7 @@ function App() {
       });
 
       const merchantId = merchantResponse.data.data.merchantResponseList[0].id;
+      const brandName = merchantResponse.data.data.merchantResponseList[0].brandName;
 
       const transactionData = await axios.get(
         `api/transaction/v2/transactions/statistics?pageSize=10&pageNumber=0&fromDate=${formattedDate}T00%3A00%3A00.00&toDate=${formattedDate}T23%3A59%3A59.00&status=ALL&merchantId=${merchantId}&language=vi`,
@@ -54,56 +55,57 @@ function App() {
           },
         }
       );
-      console.log("nghi",transactionData?.data?.data);
-      return transactionData?.data?.data?.totalSuccessAmount || 0;
-    
+
+      const totalSuccessAmount = transactionData?.data?.data?.totalSuccessAmount || 0;
+
+      // Trả về cả amount và brandName
+      return { amount: totalSuccessAmount, brandName };
     } catch (error) {
       console.error("Error during login or data fetching:", error);
-      return 0;
+      return { amount: 0, brandName: "" };
     }
   };
 
   const loginAllPhones = () => {
-   
     setAllAmount([]);
     setTotalAmount(0);
     phoneNumbers.forEach(async (phone) => {
-      const amount = await loginAndGetAmount(phone);
+      const { amount, brandName } = await loginAndGetAmount(phone);
 
       // Cập nhật từng kết quả vào state và tính tổng tiền
-      setAllAmount((prevAmounts) => [...prevAmounts, { phone, amount }]);
-      setTotalAmount((prevTotal) => prevTotal + amount); // Cộng thêm vào tổng tiền
+      setAllAmount((prevAmounts) => [
+        ...prevAmounts,
+        { phone, amount, brandName },
+      ]);
+      setTotalAmount((prevTotal) => prevTotal + amount);
     });
   };
 
   const handleAddPhoneNumbers = () => {
-    // Tách chuỗi số điện thoại thành mảng bằng dấu cách hoặc dấu phẩy
     const phonesArray = newPhoneNumbers
-      .split(/[,\s]+/) // Tách bằng dấu phẩy hoặc khoảng trắng
-      .filter((phone) => phone.trim() !== ""); // Lọc các chuỗi rỗng
+      .split(/[,\s]+/)
+      .filter((phone) => phone.trim() !== "");
 
-    // Thêm vào danh sách số điện thoại hiện tại
     setPhoneNumbers([...phoneNumbers, ...phonesArray]);
-    setNewPhoneNumbers(""); // Reset input sau khi thêm
+    setNewPhoneNumbers("");
   };
-  const HandleTotalYesterday=()=>{
-   
-    setday(String(today.getDate()).padStart(2, "0")-1);
-  }
-  const HandleTotalNow =()=>{
-   
-    setday(String(today.getDate()).padStart(2, "0"))
-  }
+
+  const HandleTotalYesterday = () => {
+    setDay(String(today.getDate() - 1).padStart(2, "0"));
+  };
+
+  const HandleTotalNow = () => {
+    setDay(String(today.getDate()).padStart(2, "0"));
+  };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-center">
         Tổng Tiền Ngày: {formattedDate}
       </h1>
-      <button onClick={HandleTotalYesterday}>Tổng Hôm Qua</button>
-      <button onClick={HandleTotalNow}>Tổng Hôm Nay</button>
+      <button className="block hover:bg-slate-400 mb-5 px-2 py-1 rounded-lg" onClick={HandleTotalNow}>Tổng Hôm Nay</button>
+      <button className="block hover:bg-slate-400 mb-5 px-2 py-1 rounded-lg" onClick={HandleTotalYesterday}>Tổng Hôm Qua</button> 
 
-      {/* Form nhập chuỗi số điện thoại */}
       <div className="flex items-center justify-center mb-4">
         <textarea
           value={newPhoneNumbers}
@@ -130,16 +132,31 @@ function App() {
       </div>
 
       <div className="text-center">
-        {AllAmount.map((item, index) => (
-          <p key={index} className="text-lg">
-            Số điện thoại <span className="font-bold">{item.phone}</span>:{" "}
-            {item.amount.toLocaleString()} VND
-          </p>
-        ))}
-      </div>
+  <table className="table-auto w-full border-collapse border border-gray-400">
+    <thead>
+      <tr className="bg-gray-200">
+        <th className="border border-gray-300 px-4 py-2">Số điện thoại</th>
+        <th className="border border-gray-300 px-4 py-2">Tên Shop</th>
+        <th className="border border-gray-300 px-4 py-2">Số tiền</th>
+      </tr>
+    </thead>
+    <tbody>
+      {AllAmount.map((item, index) => (
+        <tr key={index} className="bg-white border-b">
+          <td className="border border-gray-300 px-4 py-2">{item.phone}</td>
+          <td className="border border-gray-300 px-4 py-2">{item.brandName|| "NULL"}</td>
+          <td className="border border-gray-300 px-4 py-2">
+           {item.amount.toLocaleString()} VND
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
 
       <h2 className="text-xl font-bold text-center mt-6">
-        Tổng số tiền tất cả: {totalAmount.toLocaleString()} VND
+    Total {formattedDate}:  <span className="text-red-500"> {totalAmount.toLocaleString()} </span> VND
       </h2>
     </div>
   );
