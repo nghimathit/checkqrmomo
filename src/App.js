@@ -1,10 +1,13 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 function App() {
+  const [statusQR, setstatusQR] = useState("All")
   const [phoneNumbers, setPhoneNumbers] = useState([]);
   const [password] = useState("vanhuY90$");
   const [newPhoneNumbers, setNewPhoneNumbers] = useState("");
-  const [AllAmount, setAllAmount] = useState([]);
+  const [AllAmount, setAllAmount] = useState([]); // lưu All data api trả về 
+  const [DataHandle, setDataHandle] = useState(AllAmount)
+  console.log("alldata",DataHandle);
   const [totalAmount, setTotalAmount] = useState(0);
   const [ActiveDay, setActiveDay] = useState("Now");
   const today = new Date();
@@ -93,6 +96,23 @@ function getFirstAndLastDayOfMonth(year, month) {
 
 const { firstDay, lastDay } = getFirstAndLastDayOfMonth(2024, month-1);
 
+ const QrHasNotBeenScanned=()=>{
+        setDataHandle(AllAmount.filter((item)=>item.amount===0))
+        setstatusQR("notscan")
+ }
+ const QrHasBeenScanned=()=>{
+        setDataHandle(AllAmount.filter((item)=>item.amount>0))
+        setstatusQR("scan")
+ }
+ const QrHasBeenScannedAll=()=>{
+        setDataHandle(AllAmount);
+        setstatusQR("All")
+ }
+ useEffect(() => {
+  setDataHandle(AllAmount);
+ }, [AllAmount]);
+ console.log(DataHandle);
+
 
 
   return (
@@ -101,22 +121,22 @@ const { firstDay, lastDay } = getFirstAndLastDayOfMonth(2024, month-1);
         Tổng Tiền Ngày: {ActiveDay === "AllDay" ? `Toàn bộ tháng ${month}`:`${day}-${month}-${year}`}
       </h1>
       <button
-        className={`block hover:bg-slate-400 mb-5 px-2 py-1 rounded-lg ${ActiveDay === "Now" ? " bg-green-300" : ""}`}
+        className={`block hover:bg-green-300/50 mb-5 px-2 py-1 rounded-lg ${ActiveDay === "Now" ? " bg-green-300" : ""}`}
         onClick={HandleTotalNow}
       >
         Tổng Hôm Nay: <span className="font-bold text-red-500">{String(today.getDate()).padStart(2, "0")}/{String(today.getMonth() + 1).padStart(2, "0")}</span>
       </button>
       <button
-        className={`block hover:bg-slate-400 mb-5 px-2 py-1 rounded-lg ${ActiveDay === "Yesterday" ? " bg-green-300" : ""}`}
+        className={`block hover:bg-green-300/50 mb-5 px-2 py-1 rounded-lg ${ActiveDay === "Yesterday" ? " bg-green-300" : ""}`}
         onClick={HandleTotalYesterday}
       >
         Tổng Hôm Qua :<span className="font-bold text-red-500">{String(today.getDate() - 1).padStart(2, "0")}/{String(today.getMonth() + 1).padStart(2, "0")}</span>
       </button>
       <button
-        className={`block hover:bg-slate-400 mb-5 px-2 py-1 rounded-lg ${ActiveDay === "AllDay" ? " bg-green-300" : ""}`}
+        className={`block hover:bg-green-300/50 mb-5 px-2 py-1 rounded-lg ${ActiveDay === "AllDay" ? " bg-green-300" : ""}`}
         onClick={HandleTotalAllDayMonth}
       >
-        Tổng 1 Tháng :<span className="font-bold text-red-500">{`${firstDay}-${lastDay}`}</span>
+        Tổng 1 Tháng :<span className="font-bold text-red-500">{`${firstDay} to ${lastDay}`}</span>
       </button>
       <div className="flex items-center justify-center mb-4">
         <textarea
@@ -141,6 +161,11 @@ const { firstDay, lastDay } = getFirstAndLastDayOfMonth(2024, month-1);
           Đăng nhập và lấy số dư
         </button>
       </div>
+      <div className="flex gap-10">
+        <p className={`px-3 py-1 hover:bg-green-300/50  rounded-lg ${statusQR==="All"?"bg-green-300":''}`} onClick={QrHasBeenScannedAll}>All</p>
+        <p className={`px-3 py-1 hover:bg-green-300/50  rounded-lg ${statusQR==="scan"?"bg-green-300":''}`} onClick={QrHasBeenScanned}>Mã Đã Quét</p>
+        <p className={`px-3 py-1 hover:bg-green-300/50  rounded-lg ${statusQR==="notscan"?"bg-green-300":''}`} onClick={QrHasNotBeenScanned}>Mã Chưa Quét</p>
+      </div>
       <div className="text-center">
         <table className="table-auto w-full border-collapse border border-gray-400">
           <thead className="sticky top-0 right-0">
@@ -151,7 +176,7 @@ const { firstDay, lastDay } = getFirstAndLastDayOfMonth(2024, month-1);
             </tr>
           </thead>
           <tbody>
-            {AllAmount.map((item, index) => (
+            {DataHandle.map((item, index) => (
               <tr key={index} className="bg-white border-b">
                 <td className="border border-gray-300 px-4 py-2">{item.phone}</td>
                 <td className="border border-gray-300 px-4 py-2">{item.brandName || "NULL"}</td>
@@ -169,7 +194,7 @@ const { firstDay, lastDay } = getFirstAndLastDayOfMonth(2024, month-1);
         Total {ActiveDay === "AllDay" ? `Toàn bộ tháng ${month}`:`${day}-${month}-${year}`}:{" "}
         <span className="text-red-500"> {totalAmount.toLocaleString()} </span> VND
       </h2>
-       <p className=" bg-green-300"> <span className="text-red-600">{`${AllAmount.length} `}</span> QR</p></>
+       <p className=" bg-green-300"> <span className="text-red-600 pl-2">{`${DataHandle.length} `}</span> QR</p></>
       }
       </div>
     </div>
