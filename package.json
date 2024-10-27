@@ -39,7 +39,6 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://business.momo.vn",
   "devDependencies": {
     "autoprefixer": "^10.4.20",
     "gh-pages": "^6.2.0",

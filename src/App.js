@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 function App() {
   const [statusQR, setstatusQR] = useState("All")
   const [phoneNumbers, setPhoneNumbers] = useState([]);
-  const [password] = useState("vanhuY90$");
+  const [password] = useState("Abc123456@");
   const [newPhoneNumbers, setNewPhoneNumbers] = useState("");
   const [AllAmount, setAllAmount] = useState([]); // lưu All data api trả về 
   const [DataHandle, setDataHandle] = useState(AllAmount)
@@ -17,14 +17,14 @@ function App() {
   const [error, seteError] = useState();
   const formattedDate = `${year}-${month}-${day}`;
   const loginAndGetAmount = async (username) => {
-    const getmerchant = "/api/profile/v2/merchants?requestType=LOGIN_MERCHANTS&language=vi";
+    const getmerchant = "https://proxymomo.onrender.com/api/profile/v2/merchants?requestType=LOGIN_MERCHANTS&language=vi";
     const data = {
       username: username,
       password: password,
     };
     try {
       const response = await axios.post(
-        "/api/authentication/login?language=vi",
+        "https://proxymomo.onrender.com/api/authentication/login?language=vi",
         data,
       );
       const token = response.data.data.token;
@@ -36,7 +36,7 @@ function App() {
       const merchantId = merchantResponse.data.data.merchantResponseList[0].id;
       const brandName = merchantResponse.data.data.merchantResponseList[0].brandName;
       const transactionData = await axios.get(
-        `api/transaction/v2/transactions/statistics?pageSize=10&pageNumber=0&fromDate=${ActiveDay === "AllDay"?firstDay:formattedDate}T00%3A00%3A00.00&toDate=${ActiveDay === "AllDay"?lastDay:formattedDate}T23%3A59%3A59.00&status=ALL&merchantId=${merchantId}&language=vi`,
+        `https://proxymomo.onrender.com/api/transaction/v2/transactions/statistics?pageSize=10&pageNumber=0&fromDate=${ActiveDay === "AllDay"?firstDay:formattedDate}T00%3A00%3A00.00&toDate=${ActiveDay === "AllDay"?lastDay:formattedDate}T23%3A59%3A59.00&status=ALL&merchantId=${merchantId}&language=vi`,
         {
           headers: {
             Authorization: "Bearer " + token,
